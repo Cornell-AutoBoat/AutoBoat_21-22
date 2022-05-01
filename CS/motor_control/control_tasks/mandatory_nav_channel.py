@@ -24,10 +24,15 @@ def filter(objects):
     # filter buoys array to contain 2 objects: must be red or green and within a distance threshold
 
     threshold = 0  # distance of buoys to pay attention to, 120ft?
+    # buoys contains only green + red buoys
     buoys = objects[np.where(
         objects.label == "green buoy" or objects.label == "red buoy")]
-    close_buoys = np.sort(buoys[np.where(objects.oz < threshold)], order='oz')
-    if (len(close_buoys) > 2):      # gets nearest 2 buoys, objects is sorted by z value
+
+    # sort buoys buy z value
+    close_buoys = np.sort(buoys[np.where(buoys.oz < threshold)], order='oz')
+
+    # gets nearest 2 buoys
+    if (len(close_buoys) > 2):
         return close_buoys[:2]
     return close_buoys
 
