@@ -3,22 +3,24 @@ This file contains the software for completing the Snack Run Task
 """
 from modes.tasks_enum import Task
 import SFR
+import numpy as np
 
 # Local values
 # When the target buoy is no longer in range, we want the boat to continue moving for a 
 # set amount of time
 time=0 
-# Find the target value Z position (+ room for error) and current Z position and subtract
-# the two values
-distance_to_moveX=0
-distance_to_moveZ=0
-moving_circle=False
-moving_back=False
+
+# Expected distance when buoy disappears
+ExpectedDistance=0
+
+# The state that the boat is at 
 state=1
 
 object_list = [] #will be given to us
 important_objects = [] #the objects we care about
 
+# how long to fire motors for when it passes state 1 
+expectedTime=0
 
 #find the target value X position (+- room for error)
 
@@ -30,13 +32,21 @@ blue_buoy = [0,0]
 red_buoy = [0,0]
 green_buoy = [0, 0]
 
-#farthest distance is the relative distance of the farthest buoy we care about
+#farthest distance is the relative distance of the farthest buoy we care about (this should be the target Z value)
 farthestDistance = 0
 
 #constant for how big the task is (in ft)
 TASK_SCOPE = 106 
 RADIUS_OF_MOTION = 10
 
+# Expect X position of the blue buoy relative to boat (should be negative since boat is traveling to the right)
+Expected_BLUEX_position=0
+# amount of error for blue buoy
+Bbuoy_error=0
+# amount of error for red and green buoy
+buoy_error=0
+# amount of time we should travel in a circle
+circleTime=0
 
 
 def execute():
@@ -50,13 +60,11 @@ def execute():
 
     #use extract buoys method
     filter_buoys()
-    
     state_move_in_circle()
     state_move_back()
     state_move_back()
     state_isComplete()
 
-  
 
 def state_move_towards():
     # Will be considered state 1
@@ -66,14 +74,18 @@ def state_move_towards():
     #if not take ratio of x/z
     #take in position of blue buoy
     if (state==1):
-        #make the boat move forward firing one motor more than the other
-        #if the x position of the blue buoy is to far left of us, make the buoy fire both motor equally
-        
-        # when the blue buoy is no longer in vision fire both motor equally for a set period of time
-        # after it has finished the constant period of time change the state to 2
-        pass
-    pass
-    
+        # checks if the boat is lost or has finished the task
+        if (blue_buoy[0]=0):
+            buoy_disappear()
+
+        elif (blue_buoy[0]<Expected_BLUEX_position+Bbuoy_error or blue_buoy[0]>Expected_BLUEX_position-Bbuoy_error):
+            # fire both motors equally 
+        elif (blue_buoy[0]>Expected_BLUEX_position-Bbuoy_error):
+            # too far to the left of the Expected buoy X; fire boat to move to the right
+        elif (blue_buoy[0]<Expected_BLUEX_position+Bbuoy_error):
+            # too far to the right of the Expected buoy X;fire boat to move to the left 
+
+
 def state_move_in_circle():
     # we plan to have a predefined radius and distance that the boat should travel in 
     # so that it can make a loop around the blue buoy
@@ -82,24 +94,38 @@ def state_move_in_circle():
         # determine the radius of the path 
         # make the boat move in a predetermined circular path
         # when the red and green buoys are in sight (without the blue) make the boat move in a straight line towards them
-        # for a period of time
-        pass
-    # if completed predetermined path and moves straight line for a period of time, change state to 3
-    pass
+        # for a period of time  
+        while(time<circleTime):
+            time=time+1
+            # fire motors to turn left 
+            # right motor > left motor 
+        time=0
+        state=state+1
+        # check if it is at the expected distance from the buoys such that it should disappear
+        # if the distance is not accpetable then execute that it is lost
+        # if completed predetermined path and moves straight line for a period of time, change state to 3
+
+    
 def state_move_back():
-    if (state==3):
         # Make the boat move towards the red and green buoy. Aiming for the center between the two buoy
-        # Try to make the x position to the red buoy and the -x position to the green buoy is the same 
-        pass
-    # when it has passed the red and green buoys again change the state to 4
-    pass 
+        # Try to make the |x| position to the red buoy and the |x| position to the green buoy is the same 
+    if (state==3):
+        # checks if the boat is lost or has finished the task
+        if (green_buoy[0]=0 and red_buoy[0]=0):
+            buoy_disappear()
+        elif (np.abs(green_buoy[0])+buoy_error>=np.abs(red_buoy[0]) or np.abs(green_buoy[0])-buoy_error<=np.abs(red_buoy[0])):
+            # fire both motors equally, boat is moving towards the center
+        elif (np.abs(green_buoy[0])-np.abs(red_buoy[0])>buoy_error):
+            # too far to the left of the center fire boat to move to the right
+        elif (np.abs(green_buoy[0])-np.abs(red_buoy[0])<buoy_error):
+            # too far to the right of the center fire boat to move to the left 
+
 
 def state_isComplete():
     if (state==4):
         SFR.SNACK_RUN = True
         SFR.task = Task.DETERMINE_TASK
     pass
-
 
 
 #filters out all the buoys seen and updates the ones we care about
@@ -109,7 +135,7 @@ def filter_buoys():
 
     nib = 0 #Number of Important Buoys
     #initial states -- navigating towards the buoy
-    if state < 2:
+    if state = 1 :
         #first pass through, if greater than TASK_SCOPE, filter out unneeded buoys
         if(farthestDistance == 0):
             for obj in object_list:
@@ -135,12 +161,11 @@ def filter_buoys():
         if nib > 3: #sanity checking
             print("WARNING: UNEXPECTED NUMBER OF BUOYS SEEN")
     
-    #turning around
     elif state == 2: 
         #will check if we see a blue buoy (if we do --> special behavior)
         for obj in object_list:
             if (obj.z**2 + obj.y**2) < RADIUS_OF_MOTION**2 and obj.classType == "BLUE":
-                #will call a function to correct the motion
+                # will call a function to correct the motion 
                 pass 
         farthestDistance = TASK_SCOPE #should happen before state 3
     
@@ -165,13 +190,31 @@ def filter_buoys():
         #probably don't need anything h
         pass
         
-        
-def correct_motion():
-    # THIS METHOD IS ONLY CALLED WHEN IT IS IN STATE 2 
-    # Only happens if it evers sees the blue buoy and is too close to it
-    # Makes the boat fire motor on the opposite side so it moves away from blue buoy
-    # if it does fire motor on the opposite side, it will reverse fire the motor to the original direction 
-    state=0
-    # After it has corrected it's path state=2
-    
-    pass #PERHAPS WRITE ANOTHER METHOD FOR BEHAVIOR ON THE WAY BACK?
+  
+def buoy_disappear():
+    # this method executes if the buoy is not in sight 
+    # checks that the boat is at the expected distance where the buoy should disappear 
+    # if it is in the expected distance state+=1
+    # otherwise set state to state+=0.5
+    if (farthestDistance-ExpectedDistance<0):
+        while(time<expectedTime):
+            #fire both motors equall 
+            time+1
+        time=0
+        state=state+1
+    else:
+        state=state+0.5
+     
+         
+def boat_lost():
+    # This method executes if the boat does not see anything 
+    if (state==1.5):
+        while (blue_buoy[0]==0):
+            # turn until it sees the blue buoy
+        # if it sees the blue buoy state = 1
+        state=1
+    if (state==3.5):
+        while (red_buoy[0]==0 and green_buoy[0]):
+            # turn until it sees both the red and green buoy
+        # if it sees the red and green buoy state = 3
+        state=3
