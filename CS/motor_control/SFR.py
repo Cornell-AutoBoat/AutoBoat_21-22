@@ -12,8 +12,8 @@ task = Task.DETERMINE_TASK
 # Task tracking
 MNC = False
 AVOID_THE_CROWD = False
-FIND_A_SEAT= False
-RETURN_HOME= False
-SKEEBALL= False
-SNACK_RUN= False
-WATER_BLAST= False
+FIND_A_SEAT = False
+RETURN_HOME = False
+SKEEBALL = False
+SNACK_RUN = False
+WATER_BLAST = False
