@@ -5,7 +5,6 @@ from modes.tasks_enum import Task
 import SFR
 import numpy as np
 
-in_position = False
 
 """
 TODO IMPORTANT: this code assumes that the shooter is run by servos that can simply be written an angle to.
@@ -19,9 +18,9 @@ def FetchObjects():
 
 
 def filter(objects):
-    # filter buoys array to contain 2 objects: must be red or green and within a distance threshold
+    # filter buoys array to contain 1 object: must be skeeball_frame
 
-    threshold = 0  # distance of buoys to pay attention to, 120ft?
+    threshold = 0  # TODO: distance of buoys to pay attention to, 120ft?
     # buoys contains only green + red buoys
     buoys = objects[np.where(
         objects.label == "skeeball_frame")]  # TODO: CHANGE FOR CORRECT NAME
@@ -47,7 +46,7 @@ def execute():
 
 def getXYZ():
     bouy = filter(FetchObjects())[0]
-    return [bouy.ox,bouy.oy,bouy.oz]
+    return [bouy.ox, bouy.oy, bouy.oz]
 
 
 def shoot(lst):
