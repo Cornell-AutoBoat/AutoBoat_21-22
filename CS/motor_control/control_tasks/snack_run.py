@@ -75,14 +75,17 @@ def state_move_towards():
     #take in position of blue buoy
     if (state==1):
         # checks if the boat is lost or has finished the task
-        if (blue_buoy[0]=0):
+        if (blue_buoy[0]==0):
             buoy_disappear()
-
+            
         elif (blue_buoy[0]<Expected_BLUEX_position+Bbuoy_error or blue_buoy[0]>Expected_BLUEX_position-Bbuoy_error):
             # fire both motors equally 
+            pass
         elif (blue_buoy[0]>Expected_BLUEX_position-Bbuoy_error):
+            pass
             # too far to the left of the Expected buoy X; fire boat to move to the right
         elif (blue_buoy[0]<Expected_BLUEX_position+Bbuoy_error):
+            pass
             # too far to the right of the Expected buoy X;fire boat to move to the left 
 
 
@@ -111,13 +114,17 @@ def state_move_back():
         # Try to make the |x| position to the red buoy and the |x| position to the green buoy is the same 
     if (state==3):
         # checks if the boat is lost or has finished the task
-        if (green_buoy[0]=0 and red_buoy[0]=0):
+        if (green_buoy[0]==0 and red_buoy[0]==0):
             buoy_disappear()
+            pass
         elif (np.abs(green_buoy[0])+buoy_error>=np.abs(red_buoy[0]) or np.abs(green_buoy[0])-buoy_error<=np.abs(red_buoy[0])):
+            pass
             # fire both motors equally, boat is moving towards the center
         elif (np.abs(green_buoy[0])-np.abs(red_buoy[0])>buoy_error):
+            pass
             # too far to the left of the center fire boat to move to the right
         elif (np.abs(green_buoy[0])-np.abs(red_buoy[0])<buoy_error):
+            pass
             # too far to the right of the center fire boat to move to the left 
 
 
@@ -135,7 +142,7 @@ def filter_buoys():
 
     nib = 0 #Number of Important Buoys
     #initial states -- navigating towards the buoy
-    if state = 1 :
+    if state == 1 :
         #first pass through, if greater than TASK_SCOPE, filter out unneeded buoys
         if(farthestDistance == 0):
             for obj in object_list:
@@ -210,11 +217,13 @@ def boat_lost():
     # This method executes if the boat does not see anything 
     if (state==1.5):
         while (blue_buoy[0]==0):
+            pass
             # turn until it sees the blue buoy
         # if it sees the blue buoy state = 1
         state=1
     if (state==3.5):
         while (red_buoy[0]==0 and green_buoy[0]):
+            pass
             # turn until it sees both the red and green buoy
         # if it sees the red and green buoy state = 3
         state=3
